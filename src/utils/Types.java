@@ -11,9 +11,9 @@ public class Types {
 
     // Game Configuration constants.
     public static int MAX_GAME_TICKS = 800;         //Maximum duration of the game.
-    public static int BOMB_LIFE = 10;               //Ticks until a bomb explodes.
-    public static int FLAME_LIFE = 5;               //Ticks until a flame dissappears.
-    public static int DEFAULT_BOMB_BLAST = 2;       //Default bombs create flames with this range.
+    public static int BOMB_LIFE = 6;//10;               //Ticks until a bomb explodes.
+    public static int FLAME_LIFE = 4;//5;               //Ticks until a flame dissappears.
+    public static int DEFAULT_BOMB_BLAST = 3;//2;       //Default bombs create flames with this range.
     public static int DEFAULT_BOMB_AMMO = 1;        //Default number of simultaneous bombs an agent can put.
     public static boolean DEFAULT_BOMB_KICK = false;//Can agents kick bomb by default?
     public static int DEFAULT_VISION_RANGE = -1;    //-1 for full observability, >1 for PO.
@@ -27,10 +27,10 @@ public class Types {
     private static IGameConfig gameConfig = new OriginalGameConfig();
 
     //Board configuration constants.
-    public static int BOARD_SIZE = 11;              //Size of the board (n x n).
-    public static int BOARD_NUM_RIGID = 20;         //Number of rigid blocks to put in the level.
-    public static int BOARD_NUM_WOOD = 20;          //Number of wooden (destroyable) blocks for the level.
-    public static int BOARD_NUM_ITEMS = 10;         //Number of items to put in level.
+    public static int BOARD_SIZE = 10;              //Size of the board (n x n).
+    public static int BOARD_NUM_RIGID = 24;//20;         //Number of rigid blocks to put in the level.
+    public static int BOARD_NUM_WOOD = 17;//20;          //Number of wooden (destroyable) blocks for the level.
+    public static int BOARD_NUM_ITEMS = 3;//10;         //Number of items to put in level.
     public static int MAX_INACCESIBLE_TILES = 4;    //Number of inaccessible parts of the level allowed.
     public static int CORNER_DISTANCE = 1;          //Distance to the corner, in tiles, of the starting agent position.
     public static int BREATHING_SPACE = 2;          //Breathing space, L shaped tile section free at start around agent.

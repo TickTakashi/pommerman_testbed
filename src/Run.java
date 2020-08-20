@@ -29,17 +29,114 @@ public class Run {
         System.out.println("\t\t 5 MCTS 200 iterations, length: 12");
     }
 
-    public static void main(String[] args) {
+    public static long GenerateRuleset(){
+        // TODO: Sets game parameters, the  Returns the seed value used to generate the ruleset
+        Random rand = new Random();
+        long seed = (long)(Math.random() * Long.MAX_VALUE);
+        rand.setSeed(seed);
 
+        Types.BOMB_LIFE = 5 + rand.nextInt(15);
+        Types.FLAME_LIFE = 2 + rand.nextInt(8);
+        Types.DEFAULT_BOMB_BLAST = 1 + rand.nextInt(3);
+        Types.DEFAULT_BOMB_AMMO = 1 + rand.nextInt(3);
+        Types.BOARD_NUM_RIGID = 5 + rand.nextInt(25);
+        Types.BOARD_NUM_WOOD = 5 + rand.nextInt(25);
+        Types.BOARD_NUM_ITEMS = 0 + rand.nextInt(Types.BOARD_NUM_WOOD);
+
+        return seed;
+    }
+
+    public static void PrintRuleset(long seed){
+        Random rand = new Random();
+        rand.setSeed(seed);
+        System.out.println("For Seed " + seed + ", Generated Rules are: ");
+        System.out.println("Types.BOMB_LIFE = " + (5 + rand.nextInt(15)));
+        System.out.println("Types.FLAME_LIFE = " + (2 + rand.nextInt(8)));
+        System.out.println("Types.DEFAULT_BOMB_BLAST = " + (1 + rand.nextInt(3)));
+        System.out.println("Types.DEFAULT_BOMB_AMMO = " + (1 + rand.nextInt(3)));
+        System.out.println("Types.BOARD_NUM_RIGID = " + (5 + rand.nextInt(25)));
+        System.out.println("Types.BOARD_NUM_WOOD = " + (5 + rand.nextInt(25)));
+        System.out.println("Types.BOARD_NUM_ITEMS = " + (0 + rand.nextInt(Types.BOARD_NUM_WOOD)));
+    }
+
+    public static void main(String[] args) {
         //default
         if(args.length == 0)
-            args = new String[]{"0", "1", "1", "-1", "2", "3", "4", "5"};
+            args = new String[]{"0", "1", "1", "-1", "0", "1", "2", "3"};
 
         if(args.length != 8) {
             printHelp();
             return;
         }
 
+        int gamesPerTrial = 50;
+        int totalTrials = 30;
+
+        // TODO: Change the actual args passed in instead.
+        args[2] = "" + gamesPerTrial;
+
+        float highestFitness = -1;
+        long bestSeed = 0;
+
+        Hashtable<Long, Float> fitDict = new Hashtable<>();
+
+        // Step 5:
+        // - Repeat 1-4 M times.
+        for (int i = 0; i < totalTrials; i++) {
+            // Step 1:
+            // - Generate Ruleset
+            long ruleSet = GenerateRuleset();
+
+            // Step 2:
+            // - Run N Games
+            double[] results = run(args);
+
+            // Step 3:
+            // - Evaluate Fitness of Ruleset
+            float fitness = fitness(results);
+
+            // Step 4:
+            // - Add Results to Collection
+            fitDict.put(ruleSet, fitness);
+
+            if (fitness > highestFitness){
+                highestFitness = fitness;
+                bestSeed = ruleSet;
+                System.out.println("Found a new best seed: " + bestSeed);
+            }
+        }
+
+        // Step 6:
+        // - Select Highest Performing Ruleset from Collection
+        System.out.println("best seed was " + bestSeed);
+
+        PrintRuleset(bestSeed);
+    }
+
+    public static float fitness(double[] agentWinrates){
+        // TODO: Factor in Ticks?
+        float fit = 0;
+        if (agentWinrates[3] >  agentWinrates[2]){
+            fit += 0.25f;
+        }
+
+        if (agentWinrates[2] >  agentWinrates[1]){
+            fit += 0.25f;
+        }
+
+        if (agentWinrates[1] >  agentWinrates[0]){
+            fit += 0.25f;
+        }
+
+        fit += (agentWinrates[3] - agentWinrates[0]) * 0.25f;
+
+
+        return fit;
+    }
+
+    public static double[] run(String[] args) {
+//        long start_time = System.currentTimeMillis();
+//        System.out.println("Delta " + (System.currentTimeMillis() - start_time));
         try {
 
             Random rnd = new Random();
@@ -86,41 +183,47 @@ public class Run {
 
                 switch(agentType) {
                     case 0:
-                        p = new DoNothingPlayer(playerID++);
-                        playerStr[i-4] = "DoNothing";
-                        break;
-                    case 1:
-                        p = new RandomPlayer(seed, playerID++);
-                        playerStr[i-4] = "Random";
-                        break;
-                    case 2:
-                        p = new OSLAPlayer(seed, playerID++);
-                        playerStr[i-4] = "OSLA";
-                        break;
-                    case 3:
-                        p = new SimplePlayer(seed, playerID++);
-                        playerStr[i-4] = "RuleBased";
-                        break;
-                    case 4:
-                        RHEAParams rheaParams = new RHEAParams();
-                        rheaParams.budget_type = Constants.ITERATION_BUDGET;
-                        rheaParams.iteration_budget = 200;
-                        rheaParams.individual_length = 12;
-                        rheaParams.heurisic_type = Constants.CUSTOM_HEURISTIC;
+                        RHEAParams rheaParams0 = new RHEAParams();
+                        rheaParams0.budget_type = Constants.ITERATION_BUDGET;
+                        rheaParams0.iteration_budget = 100;
+                        rheaParams0.individual_length = 4;
+                        rheaParams0.heurisic_type = Constants.CUSTOM_HEURISTIC;
 
-                        p = new RHEAPlayer(seed, playerID++, rheaParams);
+                        p = new RHEAPlayer(seed, playerID++, rheaParams0);
                         playerStr[i-4] = "RHEA";
                         break;
-                    case 5:
-                        MCTSParams mctsParams = new MCTSParams();
-                        mctsParams.stop_type = mctsParams.STOP_ITERATIONS;
-                        mctsParams.num_iterations = 200;
-                        mctsParams.rollout_depth = 12;
+                    case 1:
+                        RHEAParams rheaParams1 = new RHEAParams();
+                        rheaParams1.budget_type = Constants.ITERATION_BUDGET;
+                        rheaParams1.iteration_budget = 200;
+                        rheaParams1.individual_length = 8;
+                        rheaParams1.heurisic_type = Constants.CUSTOM_HEURISTIC;
 
-                        mctsParams.heuristic_method = mctsParams.CUSTOM_HEURISTIC;
-                        p = new MCTSPlayer(seed, playerID++, mctsParams);
-                        playerStr[i-4] = "MCTS";
+                        p = new RHEAPlayer(seed, playerID++, rheaParams1);
+                        playerStr[i-4] = "RHEA";
                         break;
+                    case 2:
+                        RHEAParams rheaParams2 = new RHEAParams();
+                        rheaParams2.budget_type = Constants.ITERATION_BUDGET;
+                        rheaParams2.iteration_budget = 400;
+                        rheaParams2.individual_length = 12;
+                        rheaParams2.heurisic_type = Constants.CUSTOM_HEURISTIC;
+
+                        p = new RHEAPlayer(seed, playerID++, rheaParams2);
+                        playerStr[i-4] = "RHEA";
+                        break;
+
+                    case 3:
+                        RHEAParams rheaParams3 = new RHEAParams();
+                        rheaParams3.budget_type = Constants.ITERATION_BUDGET;
+                        rheaParams3.iteration_budget = 500;
+                        rheaParams3.individual_length = 16;
+                        rheaParams3.heurisic_type = Constants.CUSTOM_HEURISTIC;
+
+                        p = new RHEAPlayer(seed, playerID++, rheaParams3);
+                        playerStr[i-4] = "RHEA";
+                        break;
+
                     default:
                         System.out.println("WARNING: Invalid agent ID: " + agentType );
                 }
@@ -150,11 +253,14 @@ public class Run {
             }
             System.out.println("]");
 
-            runGames(game, seeds, N, false);
+            return runGames(game, seeds, N, false);
         } catch(Exception e) {
             e.printStackTrace();
             printHelp();
         }
+
+
+        return null;
     }
 
     /**
@@ -179,7 +285,7 @@ public class Run {
         g.run(frame, wi, separateThreads);
     }
 
-    public static void runGames(Game g, long seeds[], int repetitions, boolean useSeparateThreads){
+    public static double[] runGames(Game g, long seeds[], int repetitions, boolean useSeparateThreads){
         int numPlayers = g.getPlayers().size();
         int[] winCount = new int[numPlayers];
         int[] tieCount = new int[numPlayers];
@@ -230,6 +336,8 @@ public class Run {
             }
         }
 
+        double[] winPercentagesPerAgent = new double[numPlayers];
+
         //Done, show stats
         System.out.println("N \tWin \tTie \tLoss \tPlayer (overtime average)");
         for (int pIdx = 0; pIdx < numPlayers; pIdx++) {
@@ -240,7 +348,32 @@ public class Run {
             double lossPerc = lossCount[pIdx] * 100.0 / (double)totalNgames;
             double overtimesAvg = overtimeCount[pIdx] / (double)totalNgames;
 
+            winPercentagesPerAgent[pIdx] = winPerc;
+
             System.out.println(totalNgames + "\t" + winPerc + "%\t" + tiePerc + "%\t" + lossPerc + "%\t" + player + " (" + overtimesAvg + ")" );
+        }
+
+        return winPercentagesPerAgent;
+    }
+
+    private class Results
+    {
+        public double[] winrates;
+        public int num = 0;
+
+        public Results(double[] winrates){
+            this.winrates = winrates;
+            num = 1;
+        }
+
+        public void add(Results other){
+            for(int i = 0; i < winrates.length; i++){
+                winrates[i] = (winrates[i] * num + other.winrates[i]) / (num + 1);
+            }
+
+            num = num + 1;
         }
     }
 }
+
+
